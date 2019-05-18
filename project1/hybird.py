@@ -16,7 +16,7 @@ def gaussianKernel(sigma, n=2):
     center = size / 2
     for x in range(size):
         for y in range(size):
-            kernel[x, y] = np.exp(-0.5 * (x * x + y * y) / 2 / sigma)
+            kernel[x, y] = np.exp(-0.5 * (x * x + y * y) / 2 / sigma / sigma)
     return kernel / np.sum(kernel)
 
 '''
@@ -33,20 +33,19 @@ def testFilter():
     rgb_img_filtered = imfilter(rgb_img, kernel)
     gray_img_filtered = imfilter(gray_img, kernel)
 
-    cv2.imwrite(FILE_PATH + '/out.jpg', gray_img_filtered)
-
-    high_pass_img = rgb_img - rgb_img_filtered
-
-    plt.figure(figsize=(12, 6))
-    imgs = [rgb_img, gray_img, rgb_img_filtered, gray_img_filtered, high_pass_img]
+    plt.figure(figsize=(12, 4))
+    imgs = [rgb_img, gray_img, rgb_img_filtered, gray_img_filtered]
     for index, img in enumerate(imgs):
         plt.subplot(1, len(imgs), index + 1)
         cmap = 'gray' if len(img.shape) == 2 else None
+        if len(img.shape) == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         plt.imshow(img, cmap=cmap)
         plt.xticks([])
         plt.yticks([])
+        plt.title('(%d)' % (index + 1))
 
-    plt.show()
+    plt.savefig(FILE_PATH + 'filter.pdf')
 
 def hybird():
     cat_img = imread('cat.jpg')
@@ -60,12 +59,22 @@ def hybird():
 
     # 需要临时扩展
     cat_high = cat_img.astype(np.int16) - cat_blur.astype(np.int16)
+    cat_highpass = (cat_high + 128).astype(np.uint8)
 
     hybird_img = cat_high + dog_blur
-    plt.figure()
-    plt.imshow(hybird_img)
-    plt.show()
+    plt.figure(figsize=(12, 6))
+
+    imgs = [cat_img, dog_img, cat_blur, dog_blur, cat_highpass, hybird_img]
+    for index, img in enumerate(imgs):
+        plt.subplot(2, len(imgs) // 2, index + 1)
+        # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        plt.imshow(img)
+        plt.xticks([])
+        plt.yticks([])
+        plt.title('(%d)' % (index + 1))
+
+    plt.savefig(FILE_PATH + 'hybird.pdf')
 
 if __name__ == "__main__":
-    # testFilter()
+    testFilter()
     hybird()
